@@ -94,7 +94,6 @@ sources=(
 if [ ! -d "$srcdir" ]; then
     echo 'Source directory does not exist; trying to extract'
     srcfile="$bzipsdir/php-$SHORT_VERSION.tar.bz2"
-    sigfile="$bzipsdir/php-$SHORT_VERSION.tar.bz2.asc"
     if [ ! -f "$srcfile" ]; then
         # Check for GPG existence.
         gpg="$(which gpg)"
@@ -113,13 +112,6 @@ if [ ! -d "$srcdir" ]; then
 
             if [ ! -f "$srcfile" ]; then
                 echo "Fetching sources from $url failed"
-            elif [ ! -f "$sigfile" ]; then
-                echo "Downloading the signature..."
-                wget -P "$bzipsdir" -O "$sigfile" "${url/.tar.bz2/.tar.bz2.asc}"
-
-                if [ ! -s "$sigfile" ] && [ -f "$sigfile" ]; then
-                    rm -f "$sigfile"
-                fi
             fi
 
             if [ -f "$srcfile" ]; then
@@ -131,20 +123,6 @@ if [ ! -d "$srcdir" ]; then
             echo "ERROR: fetching sources failed:" >&2
             echo "$url" >&2
             exit 2
-        fi
-
-        if [ ! -f "$sigfile" ]; then
-            echo "WARNING: no signature available!" >&2
-        elif [ -z "$gpg" ]; then
-            echo "WARNING: gpg not found; signature will not be verified" >&2
-        else
-            "$gpg" --verify --no-default-keyring --keyring ./php.gpg "$sigfile"
-            if [ $? -ne 0 ]; then
-                echo "ERROR: invalid signature. This release may have been tampered with." >&2
-                echo "ERROR: See http://php.net/gpg-keys.php for more information on GPG signatures." >&2
-                rm -f "$srcfile" "$sigfile"
-                exit 2
-            fi
         fi
     fi
 
